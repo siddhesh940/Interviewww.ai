@@ -1,5 +1,6 @@
 "use client";
 
+import FacialRecognitionAnalysis from "@/components/call/FacialRecognitionAnalysis";
 import SentimentAnalysisSection from "@/components/call/SentimentAnalysisSection";
 import SuggestionsSection from "@/components/call/SuggestionsSection";
 import QuestionAnswerCard from "@/components/dashboard/interview/questionAnswerCard";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CandidateStatus } from "@/lib/enum";
+import { FacialAnalysisResult } from "@/services/facialAnalysisService";
 import { ResponseService } from "@/services/responses.service";
 import { analyzeSentiment, SentimentAnalysisResult } from "@/services/sentimentAnalysisService";
 import { Analytics, CallData } from "@/types/response";
@@ -35,7 +37,7 @@ import axios from "axios";
 import { ArrowLeft, DownloadIcon, TrashIcon } from "lucide-react";
 import { marked } from "marked";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ReactAudioPlayer from "react-audio-player";
 import { toast } from "sonner";
 
@@ -62,6 +64,7 @@ function CallInfo({
   const [interviewId, setInterviewId] = useState<string>("");
   const [tabSwitchCount, setTabSwitchCount] = useState<number>();
   const [sentimentAnalysis, setSentimentAnalysis] = useState<SentimentAnalysisResult | null>(null);
+  const [facialAnalysis, setFacialAnalysis] = useState<FacialAnalysisResult | null>(null);
 
   useEffect(() => {
     const fetchResponses = async () => {
@@ -83,6 +86,18 @@ function CallInfo({
 
     fetchResponses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [call_id]);
+
+  const fetchFacialAnalysis = useCallback(async () => {
+    try {
+      const response = await axios.get(`/api/facial-analysis?call_id=${call_id}`);
+      if (response.data.success) {
+        setFacialAnalysis(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching facial analysis:', error);
+      // Facial analysis is optional, so we don't show error to user
+    }
   }, [call_id]);
 
   useEffect(() => {
@@ -136,8 +151,11 @@ function CallInfo({
         const analysis = analyzeSentiment(userResponses);
         setSentimentAnalysis(analysis);
       }
+
+      // Fetch facial analysis data
+      fetchFacialAnalysis();
     }
-  }, [call, name]);
+  }, [call, name, fetchFacialAnalysis]);
 
   const onDeleteResponseClick = async () => {
     try {
@@ -459,8 +477,15 @@ function CallInfo({
           
           {/* Suggestions Section */}
           {sentimentAnalysis && (
-            <div className="mb-[150px]">
+            <div className="mb-6">
               <SuggestionsSection analysisResult={sentimentAnalysis} />
+            </div>
+          )}
+          
+          {/* Facial Recognition Analysis Section */}
+          {facialAnalysis && (
+            <div className="mb-[150px]">
+              <FacialRecognitionAnalysis analysisResult={facialAnalysis} />
             </div>
           )}
         </>

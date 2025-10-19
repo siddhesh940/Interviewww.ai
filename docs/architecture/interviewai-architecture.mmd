@@ -1,0 +1,69 @@
+flowchart TB
+  %% Actors
+  user[Candidate]
+  hr[Recruiter HR]
+
+  %% Frontend
+  subgraph FE
+    login[Login and Instructions UI]
+    liveUI[Live Interview UI - Audio Webcam Timers]
+    feedbackUI[Results and Feedback UI]
+  end
+
+  %% Backend
+  subgraph BE
+    api[REST and WebSocket APIs]
+    auth[Auth and Session - JWT OAuth]
+    orchestrator[Analysis Orchestrator - Jobs Workers]
+  end
+
+  %% AI Engine
+  subgraph AI
+    stt[Speech to Text - ASR]
+    nlp[NLP Evaluation - Relevance Clarity Accuracy]
+    fer[Facial and Eye Tracking - Confidence Engagement Stress]
+    fusion[Fusion and Scoring - Weighting Normalization]
+  end
+
+  %% Data Layer
+  subgraph DB
+    profiles[Candidate Profiles]
+    questions[Question Sets]
+    responses[Responses]
+    results[Scores and Reports]
+    media[Recordings and Artifacts]
+  end
+
+  %% Admin Panel
+  subgraph ADMIN
+    adminUI[Dashboards Scores Recordings AI Evaluations]
+  end
+
+  %% Flows
+  user --> login
+  login --> api
+  liveUI --> api
+
+  api --> auth --> api
+
+  api --> questions
+  liveUI --> api
+  api --> stt
+  stt --> api
+  api --> nlp
+  nlp --> api
+  api --> fer
+  fer --> api
+  api --> fusion
+  fusion --> api
+
+  api --> responses
+  api --> results
+  api --> media
+  api --> profiles
+
+  api --> feedbackUI
+
+  hr --> adminUI
+  adminUI --> api
+  api --> adminUI

@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
+import MiniLoader from "@/components/loaders/mini-loader/miniLoader";
 import { Button } from "@/components/ui/button";
-import { Copy, ArrowUpRight } from "lucide-react";
-import { CopyCheck } from "lucide-react";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { InterviewerService } from "@/services/interviewers.service";
 import { ResponseService } from "@/services/responses.service";
 import axios from "axios";
-import MiniLoader from "@/components/loaders/mini-loader/miniLoader";
-import { InterviewerService } from "@/services/interviewers.service";
+import { ArrowUpRight, Copy, CopyCheck } from "lucide-react";
+import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface Props {
   name: string | null;
@@ -36,41 +35,56 @@ function InterviewCard({ name, interviewerId, id, url, readableSlug }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const fetchResponses = async () => {
-      try {
-        const responses = await ResponseService.getAllResponses(id);
-        setResponseCount(responses.length);
-        if (responses.length > 0) {
-          setIsFetching(true);
-          for (const response of responses) {
-            if (!response.is_analysed) {
-              try {
-                const result = await axios.post("/api/get-call", {
-                  id: response.call_id,
-                });
+  const fetchResponses = useCallback(async () => {
+    try {
+      const responses = await ResponseService.getAllResponses(id);
+      setResponseCount(responses.length);
+      if (responses.length > 0) {
+        setIsFetching(true);
+        for (const response of responses) {
+          if (!response.is_analysed) {
+            try {
+              const result = await axios.post("/api/get-call", {
+                id: response.call_id,
+              });
 
-                if (result.status !== 200) {
-                  throw new Error(`HTTP error! status: ${result.status}`);
-                }
-              } catch (error) {
-                console.error(
-                  `Failed to call api/get-call for response id ${response.call_id}:`,
-                  error,
-                );
+              if (result.status !== 200) {
+                throw new Error(`HTTP error! status: ${result.status}`);
               }
+            } catch (error) {
+              console.error(
+                `Failed to call api/get-call for response id ${response.call_id}:`,
+                error,
+              );
             }
           }
-          setIsFetching(false);
         }
-      } catch (error) {
-        console.error(error);
+        setIsFetching(false);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchResponses();
+  }, [fetchResponses]);
+
+  // Add visibility change listener to refresh response count
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Page became visible, refresh response count
+        fetchResponses();
       }
     };
 
-    fetchResponses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchResponses]);
 
   const copyToClipboard = () => {
     navigator.clipboard

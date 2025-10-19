@@ -3,15 +3,15 @@
 import SimpleWebCam from "@/components/SimpleWebCam";
 import { FeedbackForm } from "@/components/call/feedbackForm";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useResponses } from "@/contexts/responses.context";
 import { useSimpleCamera } from "@/hooks/useSimpleCamera";
@@ -23,10 +23,10 @@ import { Interview } from "@/types/interview";
 import { FeedbackData } from "@/types/response";
 import axios from "axios";
 import {
-  AlarmClockIcon,
-  ArrowUpRightSquareIcon,
-  CheckCircleIcon,
-  XCircleIcon,
+    AlarmClockIcon,
+    ArrowUpRightSquareIcon,
+    CheckCircleIcon,
+    XCircleIcon,
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -36,8 +36,8 @@ import MiniLoader from "../loaders/mini-loader/miniLoader";
 import { Button } from "../ui/button";
 import { Card, CardHeader, CardTitle } from "../ui/card";
 import {
-  TabSwitchWarning,
-  useTabSwitchPrevention,
+    TabSwitchWarning,
+    useTabSwitchPrevention,
 } from "./tabSwitchPrevention";
 
 const webClient = new RetellWebClient();
@@ -61,7 +61,7 @@ type transcriptType = {
 };
 
 function Call({ interview }: InterviewProps) {
-  useResponses();
+  const { createResponse } = useResponses();
   const [lastInterviewerResponse, setLastInterviewerResponse] =
     useState<string>("");
   const [lastUserResponse, setLastUserResponse] = useState<string>("");
@@ -270,6 +270,31 @@ function Call({ interview }: InterviewProps) {
     fetchInterviewer();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [interview.interviewer_id]);
+
+  // Create response record when call starts
+  useEffect(() => {
+    if (callId && interview?.id) {
+      const createResponseRecord = async () => {
+        try {
+          await createResponse({
+            interview_id: interview.id,
+            name: name,
+            email: email,
+            call_id: callId,
+            is_ended: false,
+            is_analysed: false,
+            is_viewed: false,
+            tab_switch_count: 0
+          });
+          console.log('Response record created for call:', callId);
+        } catch (error) {
+          console.error('Failed to create response record:', error);
+        }
+      };
+      createResponseRecord();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callId, interview?.id]);
 
   useEffect(() => {
     if (isEnded) {

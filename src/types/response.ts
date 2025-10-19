@@ -13,6 +13,32 @@ export interface Response {
   analytics: any;
   candidate_status: string;
   tab_switch_count: number;
+  facial_analysis?: ResponseFacialAnalysisResult;
+}
+
+export interface ResponseFacialAnalysisResult {
+  emotionSummary: {
+    happy: number;
+    neutral: number;
+    nervous: number;
+    angry: number;
+    confused: number;
+    surprised: number;
+    total_frames: number;
+  };
+  confidenceIndex: number;
+  engagementScore: number;
+  stressIndicator: number;
+  eyeContactPercentage: number;
+  smileFrequency: number;
+  headStability: number;
+  suggestions: Array<{
+    title: string;
+    description: string;
+    category: 'confidence' | 'engagement' | 'stress' | 'expression';
+    icon: string;
+  }>;
+  analysisTimestamp: Date;
 }
 
 export interface Analytics {
